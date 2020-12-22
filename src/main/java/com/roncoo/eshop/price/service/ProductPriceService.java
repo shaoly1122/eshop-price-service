@@ -7,4 +7,5 @@ public interface ProductPriceService {
 	public void update(ProductPrice productPrice);
 	public void delete(Long id);
 	public ProductPrice findById(Long id);
+	public ProductPrice findByProductId(Long productId);
 }

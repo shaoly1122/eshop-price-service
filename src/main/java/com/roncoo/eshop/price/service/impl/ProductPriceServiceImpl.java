@@ -35,6 +35,20 @@ public class ProductPriceServiceImpl implements ProductPriceService {
 		jedis.del("product_price_" + productPrice.getProductId());
 	}
 	public ProductPrice findById(Long id) {
+		//这里应该是先从redis里面查，如果没有再从mysql里面查，查到了以后再刷新回redis
+		//这不就是我们之前讲解的那个mysql+redis双写一致性的问题场景+解决方案
 		return productPriceMapper.findById(id);
+	}
+	@Override
+	public ProductPrice findByProductId(Long productId) {
+		Jedis jedis = jedisPool.getResource();
+		String dataJSON = jedis.get("product_price_" + productId);
+		if(dataJSON != null && !"".equals(dataJSON)) {
+			JSONObject dataJSONObject = JSONObject.parseObject(dataJSON);
+			dataJSONObject.put("id", "-1");  
+			return JSONObject.parseObject(dataJSONObject.toJSONString(), ProductPrice.class);
+		} else {
+			return productPriceMapper.findByProductId(productId);//redis没有就从数据库里面查
+		}
 	}
 }
